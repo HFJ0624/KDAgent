@@ -1,0 +1,23 @@
+seed: 20260908
+bootstrap_samples: 20000
+models:
+  - qwen-plus
+  - qwen-max
+  - deepseek-v4-flash
+  - deepseek-v4-pro
+  - glm-5.2
+runs: [1, 2, 3]
+episodes: 20
+conditions:
+  - clean
+  - random_retrieval
+  - stage_mismatched_retrieval
+  - low_relevance_retrieval
+fusion_methods:
+  - authority_preserving
+  - retrieval_primary
+  - rrf
+  - borda
+min_confidence: 0.5
+max_repair_rounds: 2
+

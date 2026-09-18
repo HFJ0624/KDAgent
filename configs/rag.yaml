@@ -1,0 +1,28 @@
+# RAG (Retrieval-Augmented Generation) configuration for SWaT RCA experiments.
+#
+# This file drives:
+#   - Embedding provider settings (OpenAI-compatible, e.g. SiliconFlow)
+#   - Vector store (ChromaDB) location
+#   - Chunking parameters
+#   - Retrieval hyper-parameters
+
+embedding:
+  provider: openai_compatible
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key_env: "DASHSCOPE_API_KEY"
+  model: "text-embedding-v4"
+  batch_size: 8
+  timeout: 120
+
+vector_store:
+  type: chroma
+  persist_directory: "outputs/chroma_db"
+  collection_name: "swat_process_kb"
+
+chunking:
+  chunk_size: 800
+  chunk_overlap: 120
+
+retrieval:
+  top_k: 5
+  min_score: 0.0

@@ -1,0 +1,21 @@
+# WADI 使用独立向量库，避免与已有 SWaT collection 混用。
+embedding:
+  provider: openai_compatible
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key_env: "DASHSCOPE_API_KEY"
+  model: "text-embedding-v4"
+  batch_size: 8
+  timeout: 120
+
+vector_store:
+  type: chroma
+  persist_directory: "outputs/wadi_external_validation_v1/chroma_db"
+  collection_name: "wadi_process_kb_v1"
+
+chunking:
+  chunk_size: 800
+  chunk_overlap: 120
+
+retrieval:
+  top_k: 5
+  min_score: 0.0

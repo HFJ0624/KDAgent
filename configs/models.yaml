@@ -1,0 +1,58 @@
+models:
+  - name: qwen-plus
+    provider: openai_compatible
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "DASHSCOPE_API_KEY"
+    model: "qwen-plus"
+    temperature: 0.2
+    max_tokens: 8192
+    timeout: 120
+    max_retries: 5
+    retry_base_sleep: 5
+
+  - name: qwen-max
+    provider: openai_compatible
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "DASHSCOPE_API_KEY"
+    model: "qwen-max"
+    temperature: 0.2
+    max_tokens: 8192
+    timeout: 120
+    max_retries: 5
+    retry_base_sleep: 5
+
+  - name: deepseek-v4-flash
+    provider: openai_compatible
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "DASHSCOPE_API_KEY"
+    model: "deepseek-v4-flash"
+    temperature: 0.2
+    max_tokens: 8192
+    thinking_budget: 2048
+    timeout: 120
+    max_retries: 5
+    retry_base_sleep: 5
+
+  - name: deepseek-v4-pro
+    provider: openai_compatible
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "DASHSCOPE_API_KEY"
+    model: "deepseek-v4-pro"
+    temperature: 0.2
+    max_tokens: 8192
+    thinking_budget: 2048
+    timeout: 120
+    max_retries: 5
+    retry_base_sleep: 5
+
+  - name: glm-5.2
+    provider: openai_compatible
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "DASHSCOPE_API_KEY"
+    model: "glm-5.2"
+    temperature: 0.2
+    max_tokens: 8192
+    thinking_budget: 2048
+    timeout: 120
+    max_retries: 5
+    retry_base_sleep: 5

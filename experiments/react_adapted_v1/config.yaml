@@ -1,0 +1,38 @@
+experiment_name: react_adapted_v1
+model_name: deepseek-v4-pro
+num_runs: 3
+seed: 20260912
+bootstrap_samples: 20000
+
+budget:
+  max_logic_calls_per_diagnosis: 4
+  max_completion_tokens_per_call: 8192
+  max_completion_tokens_per_diagnosis: 32768
+  thinking_budget: 2048
+  timeout_seconds: 120
+  max_network_attempts_per_logic_call: 5
+  retry_base_sleep_seconds: 5
+  sleep_ms_between_diagnoses: 300
+
+agent:
+  max_ranking_length: 5
+  retrieval_top_k: 5
+  max_query_chars: 500
+
+datasets:
+  swat:
+    expected_episodes: 20
+    cases: data/swat_s2s_raw_window_fixed/llm_prompt_cases.jsonl
+    rag_config: configs/rag.yaml
+    audit_manifest: analysis/episode_audit_v1/swat_episode_audit.csv
+  wadi:
+    expected_episodes: 13
+    cases: outputs/wadi_external_validation_v1/prepared_data/llm_prompt_cases.jsonl
+    rag_config: experiments/wadi_external_validation_v1/configs/rag_wadi.yaml
+    audit_manifest: outputs/wadi_external_validation_v1/wadi_episode_manifest.csv
+
+existing_results:
+  swat_kdagent: outputs/final_experiments_frozen_v2/dual_branch_fusion_agent_deepseek-v4-pro
+  swat_serial: outputs/final_experiments_frozen_v1/rag_self_refinement_agent_deepseek-v4-pro
+  wadi_kdagent_run1: outputs/wadi_external_validation_v1/kdagent_deepseek-v4-pro
+
