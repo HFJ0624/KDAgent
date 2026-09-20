@@ -23,7 +23,7 @@ llm_kdagent_experiment/
 │   └── rag.yaml                 # RAG config (embedding, vector store, retrieval)
 ├── data/
 │   ├── llm_prompt_cases.sample.jsonl  # Minimal sample of the case schema
-│   └── rag_kb/                  # RAG knowledge-base source markdown files
+│   └── rag_kb/                  # RAG knowledge-base source files (.md and optional .pdf)
 │       ├── kb_process.md
 │       ├── kb_relations.md
 │       ├── kb_fault_patterns.md
@@ -262,6 +262,13 @@ python src/build_rag_index.py \
 
 The vectors are persisted to `outputs/chroma_db/`. (The SWaT window dataset under `data/swat_s2s_raw_window_fixed` is an external dataset and is not committed; the knowledge-base markdown under `data/rag_kb/` is committed.)
 
+**Chunking strategy and knowledge sources.** The chunker ingests three inputs — `variables_meta.csv` (one chunk per variable), `process_knowledge_template.md`, and every file in `data/rag_kb/` (Markdown, plus PDFs when the optional `pypdf` dependency is installed; a PDF with no readable text is skipped and logged). The body-splitting `strategy` is configured under `chunking` in `configs/rag.yaml`:
+
+- `heading` (default) — split by Markdown headings, then split oversized sections with a character-level sliding window and overlap.
+- `recursive` — split at the highest-priority boundary first (paragraph → line → sentence final `。！？` → clause commas → word → character fallback), so semantic units are preserved; `chunk_overlap` is re-applied between chunks. It handles both Markdown and plain text, and is Chinese-friendly.
+
+Both strategies respect `chunking.chunk_size` and `chunking.chunk_overlap`; local `source`/title/URL metadata is copied into every chunk for traceability.
+
 ### 5. Inspect retrieval
 
 ```bash
@@ -326,7 +333,7 @@ Read-only scripts that recompute metrics and audit behavior from already-saved r
 
 `configs/models.yaml` — list models under `models:`. Each entry: `name`, `provider` (`openai_compatible`), `base_url`, `api_key_env`, `model`, and optional `temperature`, `max_tokens`, `thinking_budget`, `timeout`, `max_retries`, `retry_base_sleep`. Defaults ship with `qwen-plus`, `qwen-max`, `deepseek-v4-flash`, `deepseek-v4-pro`, and `glm-5.2` (temperature 0.2, `max_tokens` 8192, `thinking_budget` 2048 for the DeepSeek/GLM reasoning models).
 
-`configs/rag.yaml` — embedding provider (OpenAI-compatible, `text-embedding-v4`), vector-store persistence (`outputs/chroma_db`, collection `swat_process_kb`), chunking, and retrieval (`top_k` 5).
+`configs/rag.yaml` — embedding provider (OpenAI-compatible, `text-embedding-v4`), vector-store persistence (`outputs/chroma_db`, collection `swat_process_kb`), chunking (`strategy: heading|recursive`, `chunk_size`, `chunk_overlap`), and retrieval (`top_k` 5).
 
 ## FAQ
 

@@ -10,3 +10,5 @@ tqdm==4.67.3
 tenacity==9.0.0
 openai==1.61.1
 chromadb==0.5.23
+# Optional: PDF knowledge-base ingestion (gracefully skipped when absent)
+pypdf==6.19.0

@@ -20,6 +20,7 @@ vector_store:
   collection_name: "swat_process_kb"
 
 chunking:
+  strategy: recursive   # heading | recursive
   chunk_size: 800
   chunk_overlap: 120
 
