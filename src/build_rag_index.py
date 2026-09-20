@@ -26,11 +26,11 @@ from src.utils import setup_logger  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="构建 SWaT 的 RAG 知识库。")
-    p.add_argument("--data_dir", required=True, help="包含 variables_meta.csv 与 process_knowledge_template.md 的目录")
-    p.add_argument("--kb_dir", required=True, help="包含补充 rag_kb/*.md 文件的目录")
-    p.add_argument("--rag_config", required=True, help="rag.yaml 的路径")
-    p.add_argument("--rebuild", action="store_true", help="重建前删除旧集合")
+    p = argparse.ArgumentParser(description="Build the SWaT RAG knowledge base.")
+    p.add_argument("--data_dir", required=True, help="Directory containing variables_meta.csv and process_knowledge_template.md")
+    p.add_argument("--kb_dir", required=True, help="Directory containing supplementary rag_kb/*.md files")
+    p.add_argument("--rag_config", required=True, help="Path to rag.yaml")
+    p.add_argument("--rebuild", action="store_true", help="Delete the old collection before rebuilding")
     return p.parse_args()
 
 

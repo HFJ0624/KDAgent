@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Syntax + unit tests + smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      - name: Install pinned dependencies
+        run: pip install -r requirements-lock.txt
+
+      - name: Syntax check (compile all sources)
+        run: python -m compileall -q src scripts experiments analysis
+
+      - name: Unit tests (offline)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -e
+          python src/test_iterative_agent.py
+          python src/test_dual_branch_fusion_agent.py
+          python src/test_model_client_budget.py
+          python src/test_final_experiment_runner.py
+          python src/test_rag_kb_builder.py
+
+      - name: Smoke test (mocked LLM, no API)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python scripts/smoke_test.py

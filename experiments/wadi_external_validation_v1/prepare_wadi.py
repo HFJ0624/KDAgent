@@ -32,7 +32,7 @@ DEFAULT_AERCA_SOURCE = Path(r"D:\workspace\python\AERCA_2")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="准备 WADI 外部验证的冻结 TA-RCA 证据。")
+    parser = argparse.ArgumentParser(description="Prepare the frozen TA-RCA evidence for WADI external validation.")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--aerca-source", type=Path, default=DEFAULT_AERCA_SOURCE)

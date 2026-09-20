@@ -20,10 +20,11 @@ Typical workflow:
 """
 
 import argparse
+import concurrent.futures
 import json
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.abspath(os.path.join(_THIS_DIR, os.pardir))
@@ -41,65 +42,79 @@ def parse_args() -> argparse.Namespace:
     See the ``help`` text in each ``add_argument`` below for parameter meanings.
     """
     p = argparse.ArgumentParser(
-        description="为配置 YAML 中的所有模型执行 LLM RCA 实验。"
+        description="Run the LLM RCA experiment for all models in the config YAML."
     )
     # data file path: JSONL file containing the RCA cases to evaluate
     p.add_argument("--data_path", default="data/llm_prompt_cases.jsonl",
-                   help="待评估的 RCA 案例数据路径（JSONL 格式）。")
+                   help="Path to the RCA case data (JSONL).")
     # model config file path: YAML config listing all models to run
     p.add_argument("--config_path", default="configs/models.yaml",
-                   help="模型配置文件路径（YAML 格式），包含所有可用模型的定义。")
+                   help="Path to the model config file (YAML), defining all available models.")
     # output directory: both intermediate artifacts and final aggregate results
     p.add_argument("--output_dir", default="outputs",
-                   help="输出目录，用于存放每个模型的中间产物与最终汇总结果。")
+                   help="Output directory for per-model artifacts and the final aggregate results.")
     # prompt template path: template used to build the LLM input
     p.add_argument("--prompt_template", default="prompts/rca_prompt_template.txt",
-                   help="RCA 任务使用的提示词模板文件路径。")
+                   help="Path to the RCA prompt template file.")
     # knowledge base template path: process knowledge template used in RAG
     p.add_argument("--knowledge_path", default="data/process_knowledge_template.md",
-                   help="流程知识库模板路径，用于 RAG 检索增强。")
+                   help="Path to the process-knowledge template used for RAG augmentation.")
     # number of repeated runs per case, used to compute average performance
     p.add_argument("--num_runs", type=int, default=3,
-                   help="每个案例的重复运行次数，用于统计稳定性指标。")
+                   help="Number of repeated inferences per case (for stability statistics).")
     # max number of cases to process; -1 means all
     p.add_argument("--max_cases", type=int, default=-1,
-                   help="最多处理的案例数量，-1 表示处理全部案例。")
+                   help="Maximum number of cases to process; -1 means all.")
     # LLM temperature controlling output randomness; uses model default when None
     p.add_argument("--temperature", type=float, default=None,
-                   help="LLM 采样温度，控制输出随机性；为 None 时使用模型默认值。")
+                   help="LLM sampling temperature controlling output randomness; None uses the model default.")
     # whether to enable resume: skip already completed cases
     p.add_argument("--resume", action="store_true",
-                   help="启用断点续跑，跳过已完成的案例。")
+                   help="Enable resume: skip already-completed cases.")
     # during resume, whether to skip historically failed cases (0=no, 1=yes)
     p.add_argument("--resume_skip_failed", type=int, default=0, choices=[0, 1],
-                   help="断点续跑时是否跳过历史失败案例（0=不跳过，1=跳过）。")
+                   help="Whether to skip historically failed cases on resume (0=no, 1=yes).")
     # sleep milliseconds between requests, for rate limiting
     p.add_argument("--sleep_ms", type=int, default=300,
-                   help="两次请求之间的休眠毫秒数，用于限流。")
+                   help="Sleep between requests in milliseconds (rate limiting).")
     # max retry count after a request failure
     p.add_argument("--max_retries", type=int, default=5,
-                   help="单次请求失败后的最大重试次数。")
+                   help="Maximum retry count after a request failure.")
     # timeout for a single HTTP request (seconds)
     p.add_argument("--request_timeout", type=int, default=120,
-                   help="单次 HTTP 请求的超时时间（秒）。")
+                   help="Timeout for a single HTTP request (seconds).")
     # base sleep seconds for exponential backoff retries
     p.add_argument("--retry_base_sleep", type=int, default=5,
-                   help="指数退避重试的基础休眠秒数。")
+                   help="Base sleep seconds for exponential-backoff retries.")
     # whether to enable RAG retrieval enhancement (0=no, 1=yes)
     p.add_argument("--use_rag", type=int, default=0, choices=[0, 1],
-                   help="是否启用 RAG 检索增强（0=不启用，1=启用）。")
+                   help="Whether to enable RAG retrieval augmentation (0=no, 1=yes).")
     # RAG config file path
     p.add_argument("--rag_config", default="configs/rag.yaml",
-                   help="RAG 配置文件路径（YAML 格式）。")
+                   help="Path to the RAG config file (YAML).")
     # RAG retrieval Top-K; None means use the default from the config file
     p.add_argument("--rag_top_k", type=int, default=None,
-                   help="RAG 检索返回的 Top-K 数量，为 None 时使用配置默认值。")
+                   help="RAG retrieval Top-K; None uses the default from the RAG config.")
     # Optional model subset: only run the specified subset of models
     p.add_argument(
         "--models",
         nargs="*",
         default=None,
-        help="可选的模型子集（空格分隔）。省略时运行配置中的所有模型。",
+        help="Optional model subset (space-separated). Omit to run every model in the config.",
+    )
+    # reproducibility seed shared with src/main.py
+    p.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible shared-state sampling (e.g. RAG jitter).",
+    )
+    # number of models to run concurrently; 1 keeps the historical serial order
+    p.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        help="Number of models to run concurrently; 1 keeps serial execution. Mind API rate limits.",
     )
     return p.parse_args()
 
@@ -148,14 +163,14 @@ def main() -> None:
     available = list_available_models(config_path)
     targets = args.models or available
 
-    print(f"可用模型：{available}")
-    print(f"本次运行：{targets}")
+    print(f"Available models: {available}")
+    print(f"This run: {targets}")
 
-    summaries: List[Dict[str, Any]] = []
-    for model_name in targets:
+    def _run_one(model_name: str) -> Optional[Dict[str, Any]]:
+        """Run a single target model and return its metrics (or None if unknown)."""
         if model_name not in available:
-            print(f"[跳过] 未知模型：{model_name}", file=sys.stderr)
-            continue
+            print(f"[skip] unknown model: {model_name}", file=sys.stderr)
+            return None
 
         # Build an argparse.Namespace for each model
         ns = argparse.Namespace(
@@ -177,14 +192,15 @@ def main() -> None:
             use_rag=args.use_rag,
             rag_config=args.rag_config,
             rag_top_k=args.rag_top_k,
+            seed=args.seed,
         )
 
-        print(f"\n========== 运行模型：{model_name} ==========")
+        print(f"\n========== Running model: {model_name} ==========")
         try:
-            metrics = run_single_model(ns)
+            return run_single_model(ns)
         except Exception as e:
-            print(f"[错误] 模型 {model_name} 抛出异常：{e}", file=sys.stderr)
-            metrics = {
+            print(f"[error] model {model_name} raised: {e}", file=sys.stderr)
+            return {
                 "model_name": model_name,
                 "num_cases": 0,
                 "num_runs": args.num_runs,
@@ -197,13 +213,25 @@ def main() -> None:
                 "error": str(e),
             }
 
-        summaries.append(metrics)
+    if args.parallel > 1:
+        # Run several models concurrently; each writes to its own per-model
+        # directory, so the writes do not collide. Keep the model order stable.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=int(args.parallel)) as ex:
+            summaries: List[Dict[str, Any]] = [
+                m for m in ex.map(_run_one, targets) if m is not None
+            ]
+    else:
+        summaries = []
+        for model_name in targets:
+            metrics = _run_one(model_name)
+            if metrics is not None:
+                summaries.append(metrics)
 
     # ---- Write the summary CSV ----
     if summaries:
         summary_path = os.path.join(metrics_dir, "all_models_summary.csv")
         _write_summary_csv(summary_path, summaries)
-        print(f"\n已写入汇总：{summary_path}")
+        print(f"\nSummary written: {summary_path}")
 
         # Print a table
         cols = [

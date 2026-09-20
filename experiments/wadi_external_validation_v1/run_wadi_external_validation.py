@@ -22,14 +22,14 @@ SANITY_SEED = 20260903
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="运行最低成本 WADI 外部验证。")
+    parser = argparse.ArgumentParser(description="Run the minimum-cost WADI external validation.")
     parser.add_argument(
         "--mode",
         choices=("prepare", "sanity", "phase-a", "auto", "summarize"),
         default="auto",
     )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--approve-api", action="store_true", help="明确允许 Embedding/LLM API 调用。")
+    parser.add_argument("--approve-api", action="store_true", help="Explicitly allow Embedding/LLM API calls.")
     parser.add_argument("--rebuild-kb", action="store_true")
     parser.add_argument("--force-train", action="store_true")
     return parser.parse_args()

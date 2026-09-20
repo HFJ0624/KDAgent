@@ -25,11 +25,11 @@ from src.utils import load_jsonl, setup_logger  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="在指定案例上测试 RAG 检索。")
-    p.add_argument("--data_path", required=True, help="llm_prompt_cases.jsonl 的路径")
-    p.add_argument("--rag_config", required=True, help="rag.yaml 的路径")
-    p.add_argument("--case_id", type=int, required=True, help="要检索的案例 id")
-    p.add_argument("--top_k", type=int, default=None, help="覆盖 rag.yaml 中的 top_k")
+    p = argparse.ArgumentParser(description="Test RAG retrieval on a given case.")
+    p.add_argument("--data_path", required=True, help="Path to llm_prompt_cases.jsonl")
+    p.add_argument("--rag_config", required=True, help="Path to rag.yaml")
+    p.add_argument("--case_id", type=int, required=True, help="Case id to retrieve")
+    p.add_argument("--top_k", type=int, default=None, help="Override top_k in rag.yaml")
     return p.parse_args()
 
 

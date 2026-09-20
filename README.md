@@ -54,6 +54,7 @@ llm_kdagent_experiment/
 ├── experiments/                 # Additional experiment variants (see below)
 ├── analysis/                    # Offline metrics recomputation / audit scripts
 ├── requirements.txt
+├── requirements-lock.txt      # Pinned versions for exact reproducibility
 └── README.md
 ```
 
@@ -69,6 +70,12 @@ pip install -r requirements.txt
 ```
 
 Key dependencies: `openai`, `chromadb`, `pandas`, `numpy`, `pyyaml`, `tenacity`, `tqdm`, `requests`.
+
+For **exact reproducibility** of the reported results, install the pinned versions instead:
+
+```bash
+pip install -r requirements-lock.txt
+```
 
 ## API Keys
 
@@ -109,6 +116,36 @@ Place a `data/llm_prompt_cases.jsonl` file (one JSON object per line), or point 
 - `prompt` (optional) — skip template assembly and use this prompt verbatim.
 
 `gt_vars`/`top10_vars` accept either arrays or comma-separated strings and are normalized automatically.
+
+## Quick Start (one-command pipeline)
+
+A `Makefile` ties together the common workflow. On Windows/PowerShell (which
+has no `make`), first set the module search path:
+
+```powershell
+$env:PYTHONPATH = (Get-Location).Path
+```
+
+Build the reproducible sample cases, then run the batch experiment:
+
+```bash
+make sample-data     # -> data/llm_prompt_cases.sample.jsonl
+make run             # batch all models; pass extras via ARGS="--max_cases 5"
+```
+
+Build the SWaT RAG knowledge base (needs real SWaT data present):
+
+```bash
+make build-rag
+```
+
+Validate before committing:
+
+```bash
+make check           # compileall (syntax)
+make unit            # offline unit tests
+make smoke           # mocked end-to-end run (no real API)
+```
 
 ## Usage
 

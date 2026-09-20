@@ -1,4 +1,4 @@
-"""Unified entry point for ReAct-adapted auditing, running, scoring, and packaging."""
+"""Unified entry point for ReAct auditing, running, scoring, and packaging."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ from experiments.react_adapted_v1.react_agent import AgentLimits, ReactAdaptedAg
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="运行 ReAct-adapted 工业 RCA 对照实验。")
+    parser = argparse.ArgumentParser(description="Run the ReAct industrial RCA comparison experiment.")
     parser.add_argument(
         "--mode",
         choices=("audit", "synth-test", "dry-run", "run-react", "run-wadi-comparators", "score", "export-txt", "package", "all-offline", "formal"),
@@ -284,7 +284,7 @@ def run_react(output: Path, cfg: Dict[str, Any], datasets: Sequence[str], runs: 
         agent = ReactAdaptedAgent(client, retriever, system_prompt, limits)
         for run_id in range(1, runs + 1):
             for index, case in enumerate(cases, start=1):
-                key = record_key(dataset, "ReAct-adapted", client.model, case["case_id"], run_id)
+                key = record_key(dataset, "ReAct", client.model, case["case_id"], run_id)
                 if key in completed:
                     print(f"[跳过] {key}", flush=True)
                     continue
@@ -429,7 +429,7 @@ def collect_rows(output: Path, cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
         rows.append(
             {
                 "dataset": record["dataset"],
-                "method": "ReAct-adapted",
+                "method": "ReAct",
                 "model": record["model_name"],
                 "run_id": int(record["run_id"]),
                 "episode_id": str(record["episode_id"]),
@@ -574,7 +574,7 @@ def score(output: Path, cfg: Dict[str, Any]) -> None:
             per_run = []
             for run_id in range(1, int(cfg["num_runs"]) + 1):
                 left = by_key.get((dataset, comparator, episode, run_id))
-                right = by_key.get((dataset, "ReAct-adapted", episode, run_id))
+                right = by_key.get((dataset, "ReAct", episode, run_id))
                 if left and right:
                     per_run.append(float(left["hit_at_5"]) - float(right["hit_at_5"]))
                     matched_records += 1
@@ -585,7 +585,7 @@ def score(output: Path, cfg: Dict[str, Any]) -> None:
         comparisons.append(
             {
                 "dataset": dataset,
-                "comparison": f"{comparator} - ReAct-adapted",
+                "comparison": f"{comparator} - ReAct",
                 "metric": "Hit@5",
                 "matched_records": matched_records,
                 "matched_episodes": len(differences),
@@ -612,13 +612,13 @@ def score(output: Path, cfg: Dict[str, Any]) -> None:
         episodes = sorted({row["episode_id"] for row in records if row["dataset"] == dataset})
         for episode in episodes:
             left = [row for row in records if row["dataset"] == dataset and row["method"] == comparator and row["episode_id"] == episode]
-            right = [row for row in records if row["dataset"] == dataset and row["method"] == "ReAct-adapted" and row["episode_id"] == episode]
+            right = [row for row in records if row["dataset"] == dataset and row["method"] == "ReAct" and row["episode_id"] == episode]
             left_by_run = {int(row["run_id"]): row for row in left}
             right_by_run = {int(row["run_id"]): row for row in right}
             matched_runs = sorted(set(left_by_run) & set(right_by_run))
             row: Dict[str, Any] = {
                 "dataset": dataset,
-                "comparison": f"{comparator} - ReAct-adapted",
+                "comparison": f"{comparator} - ReAct",
                 "episode_id": episode,
                 "matched_runs": len(matched_runs),
                 "complete_three_runs": len(matched_runs) == int(cfg["num_runs"]),
@@ -640,7 +640,7 @@ def score(output: Path, cfg: Dict[str, Any]) -> None:
     overlap_rows = []
     for dataset in ("swat", "wadi"):
         groups = interval_groups(dataset, cfg)
-        for method in ("KDAgent", "Serial", "ReAct-adapted"):
+        for method in ("KDAgent", "Serial", "ReAct"):
             selected = [row for row in records if row["dataset"] == dataset and row["method"] == method]
             episode_means = defaultdict(list)
             for row in selected:
@@ -657,26 +657,26 @@ def score(output: Path, cfg: Dict[str, Any]) -> None:
 
 def write_result_summary(output: Path, cfg: Dict[str, Any], summaries: Sequence[Mapping[str, Any]], comparisons: Sequence[Mapping[str, Any]], records: Sequence[Mapping[str, Any]]) -> None:
     expected = 99
-    react = [row for row in records if row["method"] == "ReAct-adapted"]
+    react = [row for row in records if row["method"] == "ReAct"]
     complete = len(react) == expected
     summary_lookup = {(row["dataset"], row["method"], row["scope"]): row for row in summaries}
     lines = [
-        "# ReAct-adapted 补充实验结果说明",
+        "# ReAct 补充实验结果说明",
         "",
         "## 完成状态",
-        f"- ReAct-adapted 正式记录：{len(react)}/{expected}；{'已完成全部目标' if complete else '尚未完成全部目标'}。",
+        f"- ReAct 正式记录：{len(react)}/{expected}；{'已完成全部目标' if complete else '尚未完成全部目标'}。",
         f"- 当前进程 API Key：{'可用' if os.environ.get('DASHSCOPE_API_KEY') else '不可用'}。模拟测试不计入论文结果。",
         "",
         "## 方法边界",
-        "- ReAct-adapted 是单 Agent 的自主工具循环：模型逐步决定读取证据、检索知识或提交答案。",
+        "- ReAct 是单 Agent 的自主工具循环：模型逐步决定读取证据、检索知识或提交答案。",
         "- Serial 在生成前固定完成检索并把知识放入同一迭代上下文；Only Agent 只有证据推理和验证修复，二者都没有自主工具选择。",
-        "- KDAgent 独立生成证据与检索两个分支，并用来源权限规则融合；ReAct-adapted 不分支，也不固定证据首位。",
+        "- KDAgent 独立生成证据与检索两个分支，并用来源权限规则融合；ReAct 不分支，也不固定证据首位。",
         "",
         "## 实测结论",
     ]
     if complete:
         for dataset in ("swat", "wadi"):
-            for method in ("KDAgent", "Serial", "ReAct-adapted"):
+            for method in ("KDAgent", "Serial", "ReAct"):
                 row = summary_lookup.get((dataset, method, "full"))
                 if row:
                     lines.append(f"- {dataset.upper()} {method}: Hit@1={float(row['hit_at_1']):.3f}, Hit@3={float(row['hit_at_3']):.3f}, Hit@5={float(row['hit_at_5']):.3f}, MRR={float(row['mrr']):.3f}, NDCG@5={float(row['ndcg_at_5']):.3f}。")
@@ -690,7 +690,7 @@ def write_result_summary(output: Path, cfg: Dict[str, Any], summaries: Sequence[
             "- 该实验回答的是相同候选、证据和知识条件下，双分支来源控制与单 Agent 自主工具组织的差异；它不等于官方外部 RCA 系统复现，也不能证明对所有数据集、模型或故障类型全面领先。",
             "",
             "## 8 页论文最小加入建议",
-            "在实验设置中用 2-3 句定义 ReAct-adapted 和共同预算，在主结果表增加一行，并用 2-3 句报告两数据集 Hit@5 配对差值与四项 Holm 结果。工具轨迹、完整指标和失败审计放补充材料。",
+            "在实验设置中用 2-3 句定义 ReAct 和共同预算，在主结果表增加一行，并用 2-3 句报告两数据集 Hit@5 配对差值与四项 Holm 结果。工具轨迹、完整指标和失败审计放补充材料。",
         ]
     )
     (output / "results_summary_zh.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -700,7 +700,7 @@ def write_result_summary(output: Path, cfg: Dict[str, Any], summaries: Sequence[
         "",
         "Suitable placement: Experimental Evaluation / Strong Baselines.",
         "",
-        "We added ReAct-adapted, a task-specific single-agent baseline that alternates between model-selected evidence inspection, domain-knowledge retrieval, and ranking submission. Unlike KDAgent, it neither generates independent evidence and retrieval branches nor reserves Rank 1 for an admissible evidence primary. All methods used the same frozen candidate panels and dataset-specific knowledge sources under a common per-call and per-diagnosis generation envelope. See paper_ready_table.csv and paired_comparisons.csv for the verified numerical results; no superiority or significance claim should be inserted until all 99 ReAct-adapted records and the four pre-specified paired comparisons are complete.",
+        "We added ReAct, a task-specific single-agent baseline that alternates between model-selected evidence inspection, domain-knowledge retrieval, and ranking submission. Unlike KDAgent, it neither generates independent evidence and retrieval branches nor reserves Rank 1 for an admissible evidence primary. All methods used the same frozen candidate panels and dataset-specific knowledge sources under a common per-call and per-diagnosis generation envelope. See paper_ready_table.csv and paired_comparisons.csv for the verified numerical results; no superiority or significance claim should be inserted until all 99 ReAct records and the four pre-specified paired comparisons are complete.",
     ]
     (output / "paper_ready_paragraph_en.md").write_text("\n".join(english) + "\n", encoding="utf-8")
 
@@ -725,16 +725,16 @@ def export_results_txt(output: Path) -> Path:
     formal_status = json.loads((output / "formal_run_status.json").read_text(encoding="utf-8")) if (output / "formal_run_status.json").exists() else {}
 
     lines = [
-        "KDAgent ReAct-adapted 补充实验结果汇总",
+        "KDAgent ReAct 补充实验结果汇总",
         "=" * 80,
         "用途：将本轮正式实验的统计结果、逐记录结果和资源审计集中保存，供论文写作或绘图使用。",
         "本文件不包含模型原始长响应；原始响应和工具轨迹保存在 outputs/react_adapted_v1/react/。",
         "",
         "一、正式状态",
         "- formal_status: " + json.dumps(formal_status, ensure_ascii=False),
-        "- ReAct-adapted 目标记录：99（SWaT 20 episodes x 3 runs；WADI 13 episodes x 3 runs）",
-        f"- ReAct-adapted 实际记录：{sum(1 for row in records if row.get('method') == 'ReAct-adapted')}",
-        f"- 全部 record-level 行数（KDAgent/Serial/ReAct-adapted）：{len(records)}",
+        "- ReAct 目标记录：99（SWaT 20 episodes x 3 runs；WADI 13 episodes x 3 runs）",
+        f"- ReAct 实际记录：{sum(1 for row in records if row.get('method') == 'ReAct')}",
+        f"- 全部 record-level 行数（KDAgent/Serial/ReAct）：{len(records)}",
         f"- SWaT 数据核查：{availability['datasets']['swat']['actual_episodes']} episodes，{availability['datasets']['swat']['reachable_episodes']} reachable，KB {availability['datasets']['swat']['knowledge_chunk_count']} chunks",
         f"- WADI 数据核查：{availability['datasets']['wadi']['actual_episodes']} episodes，{availability['datasets']['wadi']['reachable_episodes']} reachable，KB {availability['datasets']['wadi']['knowledge_chunk_count']} chunks",
         "- 指标分母：同一 episode 的 3 runs 是重复观测，不是 3 个独立事件；配对统计先在 episode 内聚合。",
@@ -745,7 +745,7 @@ def export_results_txt(output: Path) -> Path:
     for row in summary:
         lines.append(" | ".join(row.get(field, "") for field in ("dataset", "method", "scope", "records", "episodes", "expected_full_records", "hit_at_1", "hit_at_3", "hit_at_5", "mrr", "ndcg_at_5", "completion_rate", "valid_output_rate")))
 
-    lines.extend(["", "三、四项预设 Hit@5 配对比较（comparator - ReAct-adapted）", "字段：dataset | comparison | matched_records | matched_episodes | complete | mean_difference | CI95_low | CI95_high | raw_p | Holm_p | family_complete"])
+    lines.extend(["", "三、四项预设 Hit@5 配对比较（comparator - ReAct）", "字段：dataset | comparison | matched_records | matched_episodes | complete | mean_difference | CI95_low | CI95_high | raw_p | Holm_p | family_complete"])
     for row in comparison:
         lines.append(" | ".join(row.get(field, "") for field in ("dataset", "comparison", "matched_records", "matched_episodes", "complete", "mean_difference", "ci95_low", "ci95_high", "raw_p", "holm_p", "family_complete")))
 
@@ -781,7 +781,7 @@ def export_results_txt(output: Path) -> Path:
         "- Hit@k：前 k 个预测中任意一个 ground-truth variable 命中即为 1。",
         "- MRR：最早 ground-truth rank 的倒数；未命中为 0。",
         "- NDCG@5：仅使用前 5 位，多标签 ground truth 按理想排序归一化。",
-        "- ReAct-adapted 是任务适配版工具型 Agent，不是 RCAgent 官方完整复现。",
+        "- ReAct 是任务适配版工具型 Agent，不是 RCAgent 官方完整复现。",
     ])
     result_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"[导出] {result_file}（{result_file.stat().st_size} bytes）", flush=True)

@@ -849,12 +849,12 @@ def write_results_summary(config: Mapping[str, Any], output: Path, exp1: Sequenc
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="KDAgent 三项机制验证统一入口")
+    parser = argparse.ArgumentParser(description="KDAgent unified entry for the three mechanism validations")
     parser.add_argument("command", choices=("audit", "offline", "feedback", "all"))
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--execute", action="store_true", help="feedback 子命令正式执行 API；默认 dry-run")
-    parser.add_argument("--allow-llm", action="store_true", help="付费调用二次确认门禁")
+    parser.add_argument("--execute", action="store_true", help="For the feedback subcommand, actually call the API; default is dry-run")
+    parser.add_argument("--allow-llm", action="store_true", help="Paid-call second confirmation gate")
     parser.add_argument("--resume", action="store_true")
     return parser.parse_args()
 

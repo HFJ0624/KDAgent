@@ -1,4 +1,4 @@
-"""Tool loop and strict label isolation implementation for the ReAct-adapted agent."""
+"""Tool loop and strict label isolation implementation for the ReAct agent."""
 
 from __future__ import annotations
 
@@ -268,7 +268,7 @@ class ReactAdaptedAgent:
             transcript.append({"turn": turn, "action": action_obj, "observation": observation})
 
         return {
-            "method": "ReAct-adapted",
+            "method": "ReAct",
             "dataset": dataset,
             "model_name": self.model_client.model,
             "episode_id": str(case.get("case_id")),

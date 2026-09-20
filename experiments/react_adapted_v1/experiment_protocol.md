@@ -1,15 +1,15 @@
-# ReAct-adapted Experiment Protocol
+# ReAct Experiment Protocol
 
 ## Scope frozen before formal scoring
 
-- Method name: `ReAct-adapted` (ReAct 工具型 Agent，任务适配版).
+- Method name: `ReAct` (ReAct 工具型 Agent，任务适配版).
 - Backbone: the `deepseek-v4-pro` entry in `configs/models.yaml` (actual API model identifier: `deepseek-v4-pro`).
 - SWaT panel: the 20 records in `data/swat_s2s_raw_window_fixed/llm_prompt_cases.jsonl`.
 - WADI panel: the 13 records in `outputs/wadi_external_validation_v1/prepared_data/llm_prompt_cases.jsonl`.
 - Repetitions: three runs per episode. A run is retained regardless of accuracy.
 - Frozen candidate order and ground truth are never modified. Ground truth is loaded only by the offline scorer.
 
-The expected ReAct-adapted output count is `20 x 3 + 13 x 3 = 99` diagnosis records. These are repeated observations of 33 episodes, not 99 independent episodes.
+The expected ReAct output count is `20 x 3 + 13 x 3 = 99` diagnosis records. These are repeated observations of 33 episodes, not 99 independent episodes.
 
 ## Agent and tools
 
@@ -34,13 +34,13 @@ The method does not create KDAgent's two independent branches and does not lock 
 - Maximum network attempts per logical call: 5; network retries are not counted as new logical generations.
 - A diagnosis terminates on a valid `submit_ranking`, or fails after the fourth logical call / total completion budget / API failure.
 
-This envelope accommodates KDAgent's observed maximum of four logical calls (up to three evidence-repair calls plus one retrieval call), Serial's maximum of three, and ReAct-adapted's maximum of four. Actual calls, provider-reported prompt/completion/reasoning/total tokens, network attempts, elapsed time, truncation, parsing errors, tool errors, and stopping reason are retained.
+This envelope accommodates KDAgent's observed maximum of four logical calls (up to three evidence-repair calls plus one retrieval call), Serial's maximum of three, and ReAct's maximum of four. Actual calls, provider-reported prompt/completion/reasoning/total tokens, network attempts, elapsed time, truncation, parsing errors, tool errors, and stopping reason are retained.
 
 ## Fairness and reuse
 
 Existing SWaT KDAgent and Serial records are reused only because their model identifier, temperature, per-call token limit, thinking budget, timeout, candidate panel, and three-run protocol are verifiable from saved configuration/logs. WADI KDAgent has only run 1 saved; runs 2-3 and WADI Serial runs 1-3 must be completed under the same settings before an equal-protocol WADI comparison is reported.
 
-ReAct-adapted has the same frozen evidence and dataset-specific knowledge collection available as the corresponding KDAgent/Serial condition. Output validity for ReAct requires only a nonempty, unique, in-candidate ranking of length at most five with the primary equal to rank 1; KDAgent's evidence-authority contract is not imposed on this baseline.
+ReAct has the same frozen evidence and dataset-specific knowledge collection available as the corresponding KDAgent/Serial condition. Output validity for ReAct requires only a nonempty, unique, in-candidate ranking of length at most five with the primary equal to rank 1; KDAgent's evidence-authority contract is not imposed on this baseline.
 
 ## Scoring and inference
 

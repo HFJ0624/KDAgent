@@ -337,7 +337,7 @@ def build_impact_rows(swat_cases: List[Dict[str, Any]], wadi_cases: List[Dict[st
     # same full public view as the main experiment, so the old ReAct diagnoses are not reused.
     for item in react_tool_rows:
         dataset = str(item.get("dataset") or "").upper()
-        method = "ReAct-adapted"
+        method = "ReAct"
         model = "deepseek-v4-pro"
         run = int(item.get("run_id") or 0)
         episode = str(item.get("episode_id"))
@@ -371,7 +371,7 @@ def build_impact_rows(swat_cases: List[Dict[str, Any]], wadi_cases: List[Dict[st
         rerun_count = int(counts["rerun_count"])
         # Each ReAct diagnosis has at most four logical generations; the branch limits for KDAgent/Serial are
         # listed separately per the historical protocol, so network retries are not miscounted as logical generations.
-        if method == "ReAct-adapted":
+        if method == "ReAct":
             logic = rerun_count * 4
             network = logic * 5
         elif method == "KDAgent":
@@ -597,7 +597,7 @@ def run_react_v2(args: argparse.Namespace) -> None:
         agent = ReactAdaptedAgent(client, retriever, system_prompt, limits)
         for run_id in range(1, args.runs + 1):
             for index, case in enumerate(cases, start=1):
-                key = "|".join(("prompt_alignment_v2", protocol_hash(), dataset, "ReAct-adapted", model_name, str(case["case_id"]), str(run_id), "clean"))
+                key = "|".join(("prompt_alignment_v2", protocol_hash(), dataset, "ReAct", model_name, str(case["case_id"]), str(run_id), "clean"))
                 if key in existing:
                     print(f"[skip] {key}", flush=True)
                     continue
@@ -666,7 +666,7 @@ def score_formal() -> None:
         scored.append(
             {
                 "dataset": str(record.get("dataset") or "").lower(),
-                "method": "ReAct-adapted",
+                "method": "ReAct",
                 "model": record.get("model_name", ""),
                 "run_id": record.get("run_id"),
                 "episode_id": record.get("episode_id"),
@@ -710,7 +710,7 @@ def score_formal() -> None:
             summaries.append(
                 {
                     "dataset": dataset,
-                    "method": "ReAct-adapted",
+                    "method": "ReAct",
                     "model": "deepseek-v4-pro",
                     "scope": scope,
                     "records": n,
@@ -741,7 +741,7 @@ def score_formal() -> None:
     result = {
         "status": status,
         "api_calls_during_scoring": 0,
-        "formal_result_scope": "ReAct-adapted only",
+        "formal_result_scope": "ReAct only",
         "scored_records": len(scored),
         "expected_records": sum(expected.values()),
         "records_by_dataset": dict(observed),
@@ -800,7 +800,7 @@ def package() -> None:
     score_status = json.loads(score_status_path.read_text(encoding="utf-8")) if score_status_path.exists() else {}
     readme = """# KDAgent Prompt Alignment v2 结果包
 
-本包包含 prompt_alignment_v2 的离线审计材料与正式 ReAct-adapted 结果。正式记录共
+本包包含 prompt_alignment_v2 的离线审计材料与正式 ReAct 结果。正式记录共
 99 条：SWaT 20 episodes x 3 runs，WADI 13 episodes x 3 runs。原始响应、工具轨迹、
 评分标签、record-level 指标、汇总指标和资源消耗均保留。
 

@@ -37,6 +37,7 @@ class _FakeModelClient:
         self.model = model_config.get("model", self.name)
         self.temperature = float(model_config.get("temperature", 0.2))
         self.max_tokens = int(model_config.get("max_tokens", 2048))
+        self.thinking_budget = model_config.get("thinking_budget")
         self.api_key_env = model_config.get("api_key_env", "")
         self.logger = logger
         self._current_case_id: int = 0

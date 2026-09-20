@@ -72,6 +72,7 @@ class _FakeModelClient:
         self.model = model_config.get("model", self.name)
         self.temperature = float(model_config.get("temperature", 0.2))
         self.max_tokens = int(model_config.get("max_tokens", 2048))
+        self.thinking_budget = model_config.get("thinking_budget")
         self.api_key_env = model_config.get("api_key_env", "")
         self.logger = logger or logging.getLogger("rca_experiment")
         # main.run_single_model sets this field before each .chat() call
@@ -122,6 +123,14 @@ def main():
     # covered rather than only the ordinary single-turn flow.
     parser.add_argument("--min_confidence", type=float, default=0.5)
     parser.add_argument("--compact_evidence", type=int, default=0)
+    # The remaining flags keep this smoke script in sync with src/main.py so
+    # run_single_model always finds every attribute it reads (no drift).
+    parser.add_argument("--max_tokens", type=int, default=None)
+    parser.add_argument("--thinking_budget", type=int, default=None)
+    parser.add_argument("--use_dual_branch_fusion", type=int, default=0)
+    parser.add_argument("--case_ids", nargs="*", default=None)
+    parser.add_argument("--experiment_version", default="")
+    parser.add_argument("--protocol_sha256", default="")
     args = parser.parse_args()
 
     os.environ.setdefault("DASHSCOPE_API_KEY", "mock-key")

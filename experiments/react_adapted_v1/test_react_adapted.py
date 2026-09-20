@@ -1,4 +1,4 @@
-"""Synthetic tests for ReAct-adapted that do not call any external API."""
+"""Synthetic tests for ReAct that do not call any external API."""
 
 from __future__ import annotations
 

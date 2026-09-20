@@ -26,6 +26,7 @@ The overall experiment flow is as follows:
 import argparse
 import json
 import os
+import random
 import sys
 import time
 from datetime import datetime
@@ -243,6 +244,14 @@ def parse_args() -> argparse.Namespace:
         default=0,
         choices=[0, 1],
         help="Use compact evidence format to reduce prompt length (1=enable, 0=disable).",
+    )
+
+    # --- Reproducibility ---
+    p.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible shared-state sampling (e.g. RAG jitter); None keeps current behavior.",
     )
     return p.parse_args()
 
@@ -504,6 +513,18 @@ def run_single_model(args: argparse.Namespace) -> Dict[str, Any]:
 
     Returns the final metrics dictionary.
     """
+    # --- Step 0: Reproducibility seed (only affects non-deterministic shared
+    # state such as RAG jitter; LLM sampling is controlled by --temperature) ---
+    seed = getattr(args, "seed", None)
+    if seed is not None:
+        random.seed(seed)
+        try:
+            import numpy as np  # type: ignore
+
+            np.random.seed(seed)
+        except Exception:
+            pass
+
     # --- Step 1: Path resolution and directory creation ---
     data_path = _resolve_path(args.data_path)
     config_path = _resolve_path(args.config_path)
@@ -695,6 +716,14 @@ def run_single_model(args: argparse.Namespace) -> Dict[str, Any]:
                     rag_contexts=None,
                     compact_evidence=bool(args.compact_evidence),
                 )
+
+            # Test seam: scripts/smoke_test*.py use fake clients that read
+            # `client._current_case_id` to vary their mocked responses per case.
+            if hasattr(client, "_current_case_id"):
+                try:
+                    client._current_case_id = case_id
+                except Exception:
+                    pass
 
             # --- Call the API (supporting iterative self-refinement) ---
             use_iterative = bool(args.use_iterative_agent) or use_dual_branch_fusion

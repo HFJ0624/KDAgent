@@ -1,4 +1,4 @@
-"""Read-only consolidation of the existing KDAgent, Serial, and ReAct-adapted reproducibility materials."""
+"""Read-only consolidation of the existing KDAgent, Serial, and ReAct reproducibility materials."""
 
 from __future__ import annotations
 
@@ -77,9 +77,9 @@ def experiment_for(path: str) -> str:
     if "final_experiments_frozen_v1/rag_self" in normalized:
         return "SWaT Serial historical run, 20 episodes x 3 runs, 2026-07-23"
     if normalized.startswith("outputs/react_adapted_v1/react/"):
-        return "ReAct-adapted formal run, SWaT 60 + WADI 39 records, 2026-09-12"
+        return "ReAct formal run, SWaT 60 + WADI 39 records, 2026-09-12"
     if normalized.startswith("outputs/react_adapted_v1/"):
-        return "ReAct-adapted v1 combined offline analysis/output"
+        return "ReAct v1 combined offline analysis/output"
     if "wadi_external_validation_v1" in normalized:
         return "WADI external-validation preparation or frozen input"
     if "swat_s2s_raw_window_fixed" in normalized or "episode_audit_v1" in normalized:
@@ -405,25 +405,25 @@ def configuration_rows() -> List[Dict[str, str]]:
     raw = "react/run_records/raw_model_calls.jsonl"
     tool = "react/run_records/tool_events.jsonl"
     for dataset in ("SWaT", "WADI"):
-        add("ReAct-adapted", dataset, "model", "deepseek-v4-pro / openai_compatible", "formal_protocol_and_raw_records", f"{protocol}; {raw}")
-        add("ReAct-adapted", dataset, "temperature", "0.2", "formal_protocol_hash_linked_to_records", f"{protocol}; react/run_records/final_records.jsonl")
-        add("ReAct-adapted", dataset, "max_tokens_per_generation", "8192", "formal_protocol_hash_linked_to_records", protocol)
-        add("ReAct-adapted", dataset, "thinking_budget", "2048", "formal_protocol_hash_linked_to_records", f"{protocol}; {raw}", "raw records保存 provider 报告的 reasoning_tokens，不保存服务端内部模型修订号。")
-        add("ReAct-adapted", dataset, "generation_timeout", "120 seconds", "formal_protocol_hash_linked_to_records", protocol)
-        add("ReAct-adapted", dataset, "generation_network_attempt_cap", "5", "formal_protocol_and_current_config", f"{protocol}; react/implementation/config.yaml")
-        add("ReAct-adapted", dataset, "retrieval_top_k", "5 per search", "formal_protocol_and_tool_records", f"{protocol}; {tool}")
-        add("ReAct-adapted", dataset, "maximum_logical_generations_and_tool_actions", "4", "formal_protocol_and_raw_records", f"{protocol}; {raw}; {tool}")
-    add("ReAct-adapted", "both", "input_information", "Initial context: dataset, episode ID, frozen candidate identity metadata and tool schemas. Evidence/knowledge enter only through executed tool observations.", "implementation_and_raw_records", f"{react}react_agent.py; {raw}; {tool}")
-    add("ReAct-adapted", "both", "autonomous_tools", "get_episode_evidence; search_domain_knowledge; submit_ranking", "implementation_and_tool_records", f"{react}react_agent.py; {tool}")
-    add("ReAct-adapted", "both", "retrieval_scope", "model-written query against the corresponding dataset-specific Chroma collection; repeat search allowed", "implementation_and_tool_records", f"{react}react_agent.py; {tool}")
-    add("ReAct-adapted", "both", "stopping_and_fallback", "Stop on valid submit_ranking; otherwise stop on API failure, completion budget, or four calls. Failure keeps an empty prediction; no numerical Top-1 padding.", "current_implementation", f"{react}react_agent.py")
-    add("ReAct-adapted", "both", "short_ranking_handling", "accept 1-5 unique legal candidates with primary equal to Rank 1; no padding", "current_implementation", f"{react}react_agent.py")
+        add("ReAct", dataset, "model", "deepseek-v4-pro / openai_compatible", "formal_protocol_and_raw_records", f"{protocol}; {raw}")
+        add("ReAct", dataset, "temperature", "0.2", "formal_protocol_hash_linked_to_records", f"{protocol}; react/run_records/final_records.jsonl")
+        add("ReAct", dataset, "max_tokens_per_generation", "8192", "formal_protocol_hash_linked_to_records", protocol)
+        add("ReAct", dataset, "thinking_budget", "2048", "formal_protocol_hash_linked_to_records", f"{protocol}; {raw}", "raw records保存 provider 报告的 reasoning_tokens，不保存服务端内部模型修订号。")
+        add("ReAct", dataset, "generation_timeout", "120 seconds", "formal_protocol_hash_linked_to_records", protocol)
+        add("ReAct", dataset, "generation_network_attempt_cap", "5", "formal_protocol_and_current_config", f"{protocol}; react/implementation/config.yaml")
+        add("ReAct", dataset, "retrieval_top_k", "5 per search", "formal_protocol_and_tool_records", f"{protocol}; {tool}")
+        add("ReAct", dataset, "maximum_logical_generations_and_tool_actions", "4", "formal_protocol_and_raw_records", f"{protocol}; {raw}; {tool}")
+    add("ReAct", "both", "input_information", "Initial context: dataset, episode ID, frozen candidate identity metadata and tool schemas. Evidence/knowledge enter only through executed tool observations.", "implementation_and_raw_records", f"{react}react_agent.py; {raw}; {tool}")
+    add("ReAct", "both", "autonomous_tools", "get_episode_evidence; search_domain_knowledge; submit_ranking", "implementation_and_tool_records", f"{react}react_agent.py; {tool}")
+    add("ReAct", "both", "retrieval_scope", "model-written query against the corresponding dataset-specific Chroma collection; repeat search allowed", "implementation_and_tool_records", f"{react}react_agent.py; {tool}")
+    add("ReAct", "both", "stopping_and_fallback", "Stop on valid submit_ranking; otherwise stop on API failure, completion budget, or four calls. Failure keeps an empty prediction; no numerical Top-1 padding.", "current_implementation", f"{react}react_agent.py")
+    add("ReAct", "both", "short_ranking_handling", "accept 1-5 unique legal candidates with primary equal to Rank 1; no padding", "current_implementation", f"{react}react_agent.py")
 
     add("KDAgent", "SWaT", "result_provenance", "existing historical results: 60 records from 2026-07-23", "historical_outputs", swat_k_log)
     add("Serial", "SWaT", "result_provenance", "existing historical results: 60 records from 2026-07-23", "historical_outputs", swat_s_log)
     add("KDAgent", "WADI", "result_provenance", "run 1 reused from 2026-09-03; runs 2-3 generated 2026-09-12", "runner_and_historical_outputs", f"{react}run_experiment.py; {wadi_k_log}")
     add("Serial", "WADI", "result_provenance", "runs 1-3 generated 2026-09-12", "historical_outputs", wadi_s_log)
-    add("ReAct-adapted", "both", "result_provenance", "99 formal records generated 2026-09-12 (SWaT 60, WADI 39)", "formal_outputs", "react/results/formal_run_status.json; react/run_records/final_records.jsonl")
+    add("ReAct", "both", "result_provenance", "99 formal records generated 2026-09-12 (SWaT 60, WADI 39)", "formal_outputs", "react/results/formal_run_status.json; react/run_records/final_records.jsonl")
     return rows
 
 
@@ -447,7 +447,7 @@ def write_configuration_comparison(rows: List[Dict[str, str]]) -> None:
 def write_run_command_evidence() -> None:
     text = """# 运行命令与版本依据
 
-## ReAct-adapted
+## ReAct
 
 仓库保存的 README/协议规定以下正式命令（密钥值已替换）：
 
@@ -505,14 +505,14 @@ def write_readme(copied: List[Dict[str, Any]], chunks: List[Dict[str, Any]], sou
 
 ## 完整性摘要
 
-- ReAct-adapted：{len(final_rows)} 条正式诊断记录，其中 SWaT {counts['swat']}、WADI {counts['wadi']}；停止状态 {dict(stop_counts)}。
+- ReAct：{len(final_rows)} 条正式诊断记录，其中 SWaT {counts['swat']}、WADI {counts['wadi']}；停止状态 {dict(stop_counts)}。
 - 实际知识块：{len(chunks)}，其中 SWaT {sum(row['dataset'] == 'swat' for row in chunks)}、WADI {sum(row['dataset'] == 'wadi' for row in chunks)}。
 - 知识源文件：{len(sources)} 个 collection-source 组合。
 - 结果统计文件保持原始字节，不重新计分。
 
 ## 目录说明
 
-- `react/implementation/`：ReAct-adapted Agent、工具、提示词、配置、协议、测试和统一入口。
+- `react/implementation/`：ReAct Agent、工具、提示词、配置、协议、测试和统一入口。
 - `react/run_records/`：99 条正式结果、364 次原始模型调用及工具轨迹；`scoring_keys.jsonl` 是在线推理后单独保存的离线标签映射。
 - `react/results/`：用户指定的 5 个 CSV，以及正式状态、复现 manifest、数据/隔离审计和重叠敏感性结果。
 - `methods/shared_implementation/`：KDAgent、Serial、验证器、评分器、RAG、模型客户端与 WADI adapter 的当前实现。
@@ -533,8 +533,8 @@ def write_readme(copied: List[Dict[str, Any]], chunks: List[Dict[str, Any]], sou
 - SWaT Serial：`outputs/final_experiments_frozen_v1/rag_self_refinement_agent_deepseek-v4-pro`，历史 20 episodes x 3 runs。
 - WADI KDAgent：run 1 从 `outputs/wadi_external_validation_v1/kdagent_deepseek-v4-pro` 复用；runs 2-3 写入 `outputs/react_adapted_v1/comparators/wadi/kdagent_deepseek-v4-pro`。
 - WADI Serial：`outputs/react_adapted_v1/comparators/wadi/serial_deepseek-v4-pro`，本轮 ReAct 对照阶段生成 3 runs。
-- ReAct-adapted：`outputs/react_adapted_v1/react`，SWaT 60 + WADI 39，共 99 条。
-- `record_level_results.csv` 等联合统计文件由 ReAct-adapted v1 的离线分析阶段生成，融合已有 SWaT 对照、WADI 对照和 ReAct 正式记录。
+- ReAct：`outputs/react_adapted_v1/react`，SWaT 60 + WADI 39，共 99 条。
+- `record_level_results.csv` 等联合统计文件由 ReAct v1 的离线分析阶段生成，融合已有 SWaT 对照、WADI 对照和 ReAct 正式记录。
 
 ## 知识库来源计数
 

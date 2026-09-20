@@ -1,0 +1,12 @@
+# Pinned dependency set for reproducible experiment runs.
+# This file records the exact versions used to produce the reported results.
+# For a quick environment setup use requirements.txt; for exact reproduction,
+# install with:  pip install -r requirements-lock.txt
+requests==2.33.1
+PyYAML==6.0.3
+pandas==2.3.3
+numpy==1.26.4
+tqdm==4.67.3
+tenacity==9.0.0
+openai==1.61.1
+chromadb==0.5.23

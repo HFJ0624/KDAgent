@@ -44,15 +44,15 @@ from src.evaluator import evaluate_case  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="生成/运行 Retrieval Robustness 实验")
+    p = argparse.ArgumentParser(description="Generate/run the Retrieval Robustness experiment")
     p.add_argument("--output-dir", type=Path, default=OUT)
     p.add_argument("--config-path", type=Path, default=ROOT / "configs" / "models.yaml")
     p.add_argument("--models", nargs="+", choices=MODELS, default=list(MODELS))
     p.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=list(CONDITIONS))
-    p.add_argument("--seed", type=int, default=None, help="随机种子；省略时沿用已有 run_manifest 的 seed")
+    p.add_argument("--seed", type=int, default=None, help="Random seed; omitted uses the existing run_manifest seed")
     p.add_argument("--top-k", type=int, default=5)
-    p.add_argument("--run", action="store_true", help="显式调用 API；不加此参数只生成计划")
-    p.add_argument("--run-serial", action="store_true", help="在 --run 下同时运行 Serial corrupted 条件")
+    p.add_argument("--run", action="store_true", help="Explicitly call the API; without this flag only generate the plan")
+    p.add_argument("--run-serial", action="store_true", help="Also run the Serial corrupted condition under --run")
     p.add_argument("--max-retries", type=int, default=5)
     return p.parse_args()
 

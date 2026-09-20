@@ -52,46 +52,46 @@ OFFICIAL_CASE_COUNT = 20
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="运行正式 RCA 消融实验矩阵。")
+    parser = argparse.ArgumentParser(description="Run the official RCA ablation matrix.")
     parser.add_argument(
         "--models",
         nargs="+",
         choices=MODELS,
         default=list(MODELS),
-        help="按填写顺序串行运行一个或多个模型。",
+        help="Run one or more models serially, in the given order.",
     )
     parser.add_argument(
         "--conditions",
         nargs="+",
         choices=[condition[0] for condition in CONDITIONS],
         default=list(DEFAULT_CONDITIONS),
-        help="选择要运行的实验条件，可填写一个或多个。",
+        help="Select one or more experiment conditions to run.",
     )
     parser.add_argument(
         "--output-root",
         type=Path,
         default=OUTPUT_ROOT,
-        help="实验组输出根目录；预检时应指定独立目录，避免混入正式结果。",
+        help="Root output directory for experiment groups; use a separate dir for preflight to avoid polluting official results.",
     )
-    parser.add_argument("--num-runs", type=int, default=DEFAULT_NUM_RUNS, help="每个 case 的重复次数。")
-    parser.add_argument("--max-cases", type=int, default=-1, help="最多运行多少个 case，-1 表示全部。")
+    parser.add_argument("--num-runs", type=int, default=DEFAULT_NUM_RUNS, help="Number of repeated runs per case.")
+    parser.add_argument("--max-cases", type=int, default=-1, help="Maximum number of cases to run; -1 means all.")
     parser.add_argument(
         "--case-ids",
         nargs="+",
         default=None,
-        help="只运行指定 case ID，按填写顺序执行；适合最坏样本预检。",
+        help="Run only the given case IDs, in the given order; useful for worst-case preflight.",
     )
-    parser.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE, help="统一覆盖所选模型的采样温度。")
-    parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS, help="统一覆盖所选模型的最大输出 token 数。")
-    parser.add_argument("--resume", action="store_true", help="从已有最终汇总记录断点续跑。")
-    parser.add_argument("--dry-run", action="store_true", help="只打印选中组合的命令，不调用模型 API。")
+    parser.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE, help="Override sampling temperature for the selected models.")
+    parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS, help="Override max output tokens for the selected models.")
+    parser.add_argument("--resume", action="store_true", help="Resume from existing final-aggregate records.")
+    parser.add_argument("--dry-run", action="store_true", help="Only print the commands for the selected combos; do not call the model API.")
     args = parser.parse_args(argv)
     if len(args.models) != len(set(args.models)):
-        parser.error("--models 中不能重复填写同一个模型。")
+        parser.error("--models cannot contain the same model more than once.")
     if len(args.conditions) != len(set(args.conditions)):
-        parser.error("--conditions 中不能重复填写同一个实验条件。")
+        parser.error("--conditions cannot contain the same condition more than once.")
     if args.case_ids and len(args.case_ids) != len(set(args.case_ids)):
-        parser.error("--case-ids 中不能重复填写同一个 case。")
+        parser.error("--case-ids cannot contain the same case more than once.")
     return args
 
 
